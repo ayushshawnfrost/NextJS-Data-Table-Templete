@@ -42,7 +42,7 @@ const Limit = ({ initialLimit }: { initialLimit: string }) => {
     <div className="flex items-center py-4">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline">Rows per page</Button>
+          <Button variant="outline">Rows per page: {limit}</Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56">
           <DropdownMenuSeparator />
