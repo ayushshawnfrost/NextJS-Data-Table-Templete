@@ -20,7 +20,7 @@ export default async function Page({
   searchParams: { page: string; limit: string; search: string };
 }) {
   const page = searchParams.page ? parseInt(searchParams.page) : 1;
-  const limit = searchParams.limit ?? '5';
+  const limit = searchParams.limit ?? "5";
   const search = searchParams.search || "";
   const data = await fetchUsers(page, limit, search);
 
@@ -38,13 +38,15 @@ export default async function Page({
           }
           fallback={<div>Loading...</div>}
         >
-          <UsersTable
-            columns={columns}
-            data={data}
-            initialPage={page}
-            initialLimit={limit}
-            initialSearch={search}
-          />
+          <div className="border border-gray-300 rounded-lg p-4">
+            <UsersTable
+              columns={columns}
+              data={data}
+              initialPage={page}
+              initialLimit={limit}
+              initialSearch={search}
+            />
+          </div>
         </Suspense>
       </div>
     </section>
