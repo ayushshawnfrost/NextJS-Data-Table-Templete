@@ -54,7 +54,9 @@ export const columns: ColumnDef<User>[] = [
     accessorKey: "createdAt",
     header: "Created At",
     cell: ({ row }) => {
-      return <div className="font-medium">{row.getValue("createdAt")}</div>;
+      const date = new Date(row.getValue("createdAt"));
+      const formattedDate = `${('0' + (date.getMonth() + 1)).slice(-2)}-${('0' + date.getDate()).slice(-2)}-${date.getFullYear()}`;
+      return <div className="font-medium">{formattedDate}</div>;
     },
   },
 ];
