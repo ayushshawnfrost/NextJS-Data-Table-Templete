@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef, ChangeEvent } from "react";
+import { useState, useEffect, useRef, ChangeEvent, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useDebounce } from "use-debounce";
 import Select, { SingleValue } from "react-select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EmojiClickData } from "emoji-picker-react";
-import EmojiPicker from "emoji-picker-react";
+
+const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
 interface Message {
   id: string;
@@ -31,7 +32,7 @@ const initialMessages: Message[] = [
 const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState<string>("");
-  const [debouncedInput] = useDebounce(input, 300);
+  const [debouncedInput] = useDebounce(input, 100);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [tagOptions, setTagOptions] = useState<
     { label: string; value: string }[]
@@ -40,24 +41,22 @@ const ChatPage = () => {
     { label: string; value: string }[]
   >([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const emojiPickerRef = useRef(null);
 
   useEffect(() => {
     const lastChar = input.slice(-1);
-    const lastword = input.slice(-6);
+    const enterEmoji = input.slice(-7);
     if (lastChar === "@") {
-      setTagOptions(
-        mockUsers.map((user) => ({ label: `@${user}`, value: user }))
-      );
+      setTagOptions(mockUsers.map((user) => ({ label: `${user}`, value: user })));
     } else if (lastChar === "/") {
       setCommandOptions(mockCommands);
-    } else if (lastword === ":emoji") {
-      setInput((prev) => prev.slice(6));
+    } else if (enterEmoji === ":emoji:") {
+      setInput((prev) => prev.substring(0,prev.length-7));
       setShowEmojiPicker(true);
     } else {
       setTagOptions([]);
       setCommandOptions([]);
     }
-    setShowEmojiPicker(false);
   }, [debouncedInput]);
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -66,17 +65,12 @@ const ChatPage = () => {
 
   const handleSend = () => {
     if (input.trim() === "") return;
-    setMessages([
-      ...messages,
-      { id: Date.now().toString(), text: input, user: "you" },
-    ]);
+    setMessages([...messages, { id: Date.now().toString(), text: input, user: "you" }]);
     setInput("");
     setShowEmojiPicker(false);
   };
 
-  const handleSelectUser = (
-    option: SingleValue<{ label: string; value: string }>
-  ) => {
+  const handleSelectUser = (option: SingleValue<{ label: string; value: string }>) => {
     if (option) {
       setInput(input + option.label);
     }
@@ -86,9 +80,7 @@ const ChatPage = () => {
     }
   };
 
-  const handleSelectCommand = (
-    option: SingleValue<{ label: string; value: string }>
-  ) => {
+  const handleSelectCommand = (option: SingleValue<{ label: string; value: string }>) => {
     if (option) {
       setInput(option.label);
     }
@@ -98,8 +90,12 @@ const ChatPage = () => {
     }
   };
 
-  const handleEmojiClick = (emojiData: EmojiClickData, event: MouseEvent) => {
+  const handleEmojiClick = useCallback((emojiData: EmojiClickData, event: MouseEvent) => {
     setInput(input + emojiData.emoji);
+  }, [input]);
+
+  const toggleEmojiPicker = () => {
+    setShowEmojiPicker((prev) => !prev);
   };
 
   return (
@@ -142,8 +138,8 @@ const ChatPage = () => {
       )}
       <div className="relative flex items-center p-4 border-t">
         {showEmojiPicker && (
-          <div className="absolute bottom-full mb-2">
-            <EmojiPicker onEmojiClick={handleEmojiClick} />
+          <div className="absolute bottom-full mb-2" ref={emojiPickerRef}>
+            <Picker onEmojiClick={handleEmojiClick} lazyLoadEmojis={true} />
           </div>
         )}
         <Input
@@ -154,10 +150,7 @@ const ChatPage = () => {
           placeholder="Type a message..."
           className="flex-1"
         />
-        <Button
-          onClick={() => setShowEmojiPicker((prev) => !prev)}
-          className="mx-2"
-        >
+        <Button onClick={toggleEmojiPicker} className="mx-2">
           😀
         </Button>
         <Button onClick={handleSend} className="ml-2">

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { User, columns } from "./(table)/columns";
 import { UsersTable } from "./(table)/usersTable";
+import { Metadata } from 'next';
 
 async function fetchUsers(
   page: number,
@@ -12,6 +13,11 @@ async function fetchUsers(
   );
   const data = await res.json();
   return data;
+}
+
+export const metadata: Metadata = {
+  title: "Users",
+  description: "A list of users.",
 }
 
 export default async function Page({
